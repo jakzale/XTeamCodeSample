@@ -18,9 +18,11 @@ with
   static member Empty(maxSize: int): BoundList<_> =
     if maxSize < 1 then
       invalidArg "maxSize" "maxSize must be greater than 0"
-    { maxSize = 0; data = [] }
+    { maxSize = maxSize; data = [] }
   member __.Insert(elem: _): BoundList<_> =
-    let newData = List.truncate __.maxSize (elem :: __.data)
+    let newData =
+        List.truncate __.maxSize (elem :: List.rev __.data)
+        |> List.rev
     {__ with data = newData}
 
   interface IBoundList<'a> with
@@ -44,6 +46,7 @@ module BoundList =
 
   let inline insert (elem: _) (boundList: BoundList<_>): BoundList<_> =
     boundList.Insert(elem)
+
 
 type MutableBoundList<'a>(maxSize: int) =
   do
