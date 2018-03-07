@@ -1,0 +1,4 @@
+# Ignore paket files
+.paket/load
+packages
+paket-files
