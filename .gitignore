@@ -2,3 +2,7 @@
 .paket/load
 packages
 paket-files
+
+# Ignore Project files
+bin
+obj
