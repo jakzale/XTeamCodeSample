@@ -28,11 +28,38 @@ with
  
     member __.Count = List.length __.data
 
-    member __.Get(index) =
+    member __.Get(index): _ =
       if index < 0 || index >= (__ :> IBoundList<_>).Count then
         raise <| IndexOutOfRangeException ()
 
       __.data.[index]
 
+type MutableBoundList<'a>(maxSize: int) =
+  do
+    if maxSize < 1 then
+      invalidArg "maxSize" "maxSize must be greater than 0"
 
+  let size = maxSize + 1
+  let storage = Array.zeroCreate<'a> size
+  let mutable head = 0
+  let mutable tail = 0
+
+  let inc(i) = (i + 1) % size
+  let isFull () = inc(head) = tail
+    
+  interface IBoundList<'a> with
+    member __.MaxSize = maxSize
+
+    member __.Insert(elem: _): IBoundList<_> =
+      if isFull () then
+        tail <- inc tail
+      Array.set storage head elem
+      head <- inc head
+      __ :> IBoundList<_>
+
+    member __.Count = (size + head - tail) % size
+
+    member __.Get(i: int): _ =
+      let k = (i + tail) % size
+      storage.[k]
 
