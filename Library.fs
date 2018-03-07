@@ -1,12 +1,12 @@
-#load ".paket/load/main.group.fsx"
+namespace Library
 
 open System
 
 type IBoundList<'a> =
-    abstract member MaxSize: int with get
-    abstract member Insert: 'a -> IBoundList<'a>
-    abstract member Count: int with get
-    abstract member Get: int -> 'a
+  abstract member MaxSize: int with get
+  abstract member Insert: 'a -> IBoundList<'a>
+  abstract member Count: int with get
+  abstract member Get: int -> 'a
 
 
 type BoundList<'a> =
@@ -47,8 +47,8 @@ module BoundList =
 
 type MutableBoundList<'a>(maxSize: int) =
   do
-    if maxSize < 1 then
-      invalidArg "maxSize" "maxSize must be greater than 0"
+    if not (maxSize > 0 && maxSize < System.Int32.MaxValue) then
+      invalidArg "maxSize" "maxSize must be greater than 0 and less than Int32.MaxValue"
 
   let size = maxSize + 1
   let storage = Array.zeroCreate<'a> size
@@ -73,24 +73,5 @@ type MutableBoundList<'a>(maxSize: int) =
     member __.Get(i: int): _ =
       let k = (i + tail) % size
       storage.[k]
-
-
-// Some basic checks with FsCheck
-
-open FsCheck
-
-let boundListMaxSizeInvariant (maxSize: int) (elements: int list) =
-  let initialBoundList : BoundList<int> = BoundList.empty maxSize
-
-  elements
-  |> List.fold
-      (fun boundList elem -> 
-        let result = BoundList.insert elem boundList 
-
-        // failwith ""
-        result
-      )
-      initialBoundList
-  |> ignore
 
 

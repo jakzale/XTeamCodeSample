@@ -1,6 +1,0 @@
-generate_load_scripts: true
-framework: net46
-
-source https://www.nuget.org/api/v2
-
-nuget FsCheck
