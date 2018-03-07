@@ -1,3 +1,4 @@
+#load ".paket/load/main.group.fsx"
 
 open System
 
@@ -9,22 +10,24 @@ type IBoundList<'a> =
 
 
 type BoundList<'a> =
-  {
+  private {
     maxSize: int
     data: 'a list
   }
 with 
-  member __.Empty(maxSize: int): BoundList<_> =
+  static member Empty(maxSize: int): BoundList<_> =
     if maxSize < 1 then
       invalidArg "maxSize" "maxSize must be greater than 0"
     { maxSize = 0; data = [] }
+  member __.Insert(elem: _): BoundList<_> =
+    let newData = List.truncate __.maxSize (elem :: __.data)
+    {__ with data = newData}
 
   interface IBoundList<'a> with
     member __.MaxSize = __.maxSize
     
     member __.Insert(elem: _): IBoundList<_> =
-      let newData = List.truncate __.maxSize (elem :: __.data)
-      {__ with data = newData} :> IBoundList<'a>
+      __.Insert(elem) :> IBoundList<_>
  
     member __.Count = List.length __.data
 
@@ -33,6 +36,14 @@ with
         raise <| IndexOutOfRangeException ()
 
       __.data.[index]
+
+// Convenience functions for testing
+module BoundList =
+  let inline empty (maxSize: int) =
+    BoundList<_>.Empty maxSize
+
+  let inline insert (elem: _) (boundList: BoundList<_>): BoundList<_> =
+    boundList.Insert(elem)
 
 type MutableBoundList<'a>(maxSize: int) =
   do
@@ -62,4 +73,24 @@ type MutableBoundList<'a>(maxSize: int) =
     member __.Get(i: int): _ =
       let k = (i + tail) % size
       storage.[k]
+
+
+// Some basic checks with FsCheck
+
+open FsCheck
+
+let boundListMaxSizeInvariant (maxSize: int) (elements: int list) =
+  let initialBoundList : BoundList<int> = BoundList.empty maxSize
+
+  elements
+  |> List.fold
+      (fun boundList elem -> 
+        let result = BoundList.insert elem boundList 
+
+        // failwith ""
+        result
+      )
+      initialBoundList
+  |> ignore
+
 
