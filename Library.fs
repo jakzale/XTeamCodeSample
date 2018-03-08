@@ -19,6 +19,7 @@ with
     if maxSize < 1 then
       invalidArg "maxSize" "maxSize must be greater than 0"
     { maxSize = maxSize; data = [] }
+
   member __.Insert(elem: _): BoundList<_> =
     let newData =
       List.truncate __.maxSize (elem :: List.rev __.data)
