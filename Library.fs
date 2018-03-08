@@ -14,12 +14,14 @@ type BoundList<'a> =
     maxSize: int
     data: 'a list
   }
-with 
+with
+  /// Create an emtpy BoundList
   static member Empty(maxSize: int): BoundList<_> =
     if maxSize < 1 then
       invalidArg "maxSize" "maxSize must be greater than 0"
     { maxSize = maxSize; data = [] }
 
+  /// Return a new BoundList with an item inserted
   member __.Insert(elem: _): BoundList<_> =
     let newData =
       List.truncate __.maxSize (elem :: List.rev __.data)
