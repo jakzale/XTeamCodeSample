@@ -6,3 +6,6 @@ paket-files
 # Ignore Project files
 bin
 obj
+
+# Ignore BenchmarkDotNet files
+BenchmarkDotNet.Artifacts

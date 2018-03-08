@@ -8,7 +8,7 @@ type IBoundList<'a> =
   abstract member Count: int with get
   abstract member Get: int -> 'a
 
-
+/// Reference Implementation for IBoundList
 type BoundList<'a> =
   private {
     maxSize: int
@@ -21,8 +21,8 @@ with
     { maxSize = maxSize; data = [] }
   member __.Insert(elem: _): BoundList<_> =
     let newData =
-        List.truncate __.maxSize (elem :: List.rev __.data)
-        |> List.rev
+      List.truncate __.maxSize (elem :: List.rev __.data)
+      |> List.rev
     {__ with data = newData}
 
   interface IBoundList<'a> with
@@ -39,7 +39,7 @@ with
 
       __.data.[index]
 
-// Convenience functions for testing
+/// Convenience functions
 module BoundList =
   let inline empty (maxSize: int) =
     BoundList<_>.Empty maxSize
@@ -47,12 +47,14 @@ module BoundList =
   let inline insert (elem: _) (boundList: BoundList<_>): BoundList<_> =
     boundList.Insert(elem)
 
-
+/// Optimised Implementation for IBoundList using a circular buffer
 type MutableBoundList<'a>(maxSize: int) =
   do
     if not (maxSize > 0 && maxSize < System.Int32.MaxValue) then
       invalidArg "maxSize" "maxSize must be greater than 0 and less than Int32.MaxValue"
-
+  
+  // The actual size of the buffer is MaxSize + 1, to distinguish between full
+  // and empty circular buffer.
   let size = maxSize + 1
   let storage = Array.zeroCreate<'a> size
   let mutable head = 0
@@ -67,8 +69,10 @@ type MutableBoundList<'a>(maxSize: int) =
     member __.Insert(elem: _): IBoundList<_> =
       if isFull () then
         tail <- inc tail
-      Array.set storage head elem
+      
+      storage.[head] <- elem
       head <- inc head
+
       __ :> IBoundList<_>
 
     member __.Count = (size + head - tail) % size

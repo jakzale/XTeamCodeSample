@@ -7,13 +7,7 @@ open FsCheck
 
 open Library
 
-let boundListMaxSizeInvariant (boundList: IBoundList<'a>) (elem: 'a): IBoundList<'a> =
-  let result = boundList.Insert elem
-
-  result.Count |> should be (lessThanOrEqualTo result.MaxSize)
-
-  result
-
+/// Inserting an element increases the Count by 1 up to MaxCount
 let boundListInsertInvariant (boundList : IBoundList<'a>) (elem: 'a): IBoundList<'a> =
   let initialCount = boundList.Count
   let result = boundList.Insert elem
@@ -22,6 +16,7 @@ let boundListInsertInvariant (boundList : IBoundList<'a>) (elem: 'a): IBoundList
 
   result
 
+/// Test for equality between two IBoundLists
 let boundListEqual (a: IBoundList<'a>) (b: IBoundList<'a>) =
   a.MaxSize |> should equal b.MaxSize
   a.Count |> should equal b.Count
@@ -31,6 +26,7 @@ let boundListEqual (a: IBoundList<'a>) (b: IBoundList<'a>) =
     let bI = b.Get(i)
     aI |> should equal bI
  
+/// After inserting the same element, two IBoundList should remain equal
 let boundListSameInvariant (a : IBoundList<_>, b : IBoundList<_>) (elem : _) : IBoundList<_> * IBoundList<_> =
   let newA = a.Insert(elem)
   let newB = b.Insert(elem)
@@ -40,7 +36,7 @@ let boundListSameInvariant (a : IBoundList<_>, b : IBoundList<_>) (elem : _) : I
   (newA, newB)
 
 [<Property>]
-let ``A new IBoundList should be empty with proper MaxSize`` (maxSize: int) =
+let ``A new BoundList should be empty with proper MaxSize`` (maxSize: int) =
   maxSize > 0 ==>
   lazy (let boundList: IBoundList<int> = BoundList.empty maxSize :> IBoundList<_>
         boundList.MaxSize |> should equal maxSize
@@ -50,46 +46,24 @@ let ``A new IBoundList should be empty with proper MaxSize`` (maxSize: int) =
 let ``BoundList should contain last MaxSize elements of a sequence`` (maxSize: int) (elems: int array) =
   maxSize > 0 ==>
   lazy (let initialBoundList: IBoundList<int> = BoundList.empty maxSize :> IBoundList<_>
+        // Get the boundList that should contain the last maxSize elements
         let boundList =
-            elems
-            |> Array.fold (fun (boundList: IBoundList<_>) item -> boundList.Insert(item)) initialBoundList
+          elems
+          |> Array.fold (fun (boundList: IBoundList<_>) item -> boundList.Insert(item)) initialBoundList
+        // Calculate last maxSize elements directly
         let lastElems =
-            elems
-            |> Array.rev
-            |> Array.truncate maxSize
-            |> Array.rev
+          elems
+          |> Array.rev
+          |> Array.truncate maxSize
+          |> Array.rev
 
         for i in 0 .. Array.length lastElems - 1 do
-            boundList.Get(i) |> should equal lastElems.[i])
-
-[<Property>]
-let ``BoundList Count should never be greater than MaxSize`` (maxSize: int) (elems: int array) =
-  maxSize > 0 ==>
-  lazy (let boundList = BoundList.empty maxSize :> IBoundList<_>
-        elems
-        |> Array.fold boundListMaxSizeInvariant boundList
-        |> ignore)
+          boundList.Get(i) |> should equal lastElems.[i])
 
 [<Property>]
 let ``BoundList Count should increase with insert up to MaxSize`` (maxSize: int) (elems: int array) =
   maxSize > 0 ==>
   lazy (let boundList = BoundList.empty maxSize :> IBoundList<_>
-        elems
-        |> Array.fold boundListInsertInvariant boundList
-        |> ignore)
-
-[<Property>]
-let ``MutableBoundList Count should never be greater than MaxSize`` (maxSize: int) (elems: int array) =
-  (maxSize > 0 && maxSize < System.Int32.MaxValue) ==>
-  lazy (let boundList = MutableBoundList(maxSize) :> IBoundList<_>
-        elems
-        |> Array.fold boundListMaxSizeInvariant boundList
-        |> ignore)
-
-[<Property>]
-let ``MutableBoundList Count should increase with insert up to MaxSize`` (maxSize: int) (elems: int array) =
-  (maxSize > 0 && maxSize < System.Int32.MaxValue) ==>
-  lazy (let boundList = MutableBoundList(maxSize) :> IBoundList<_>
         elems
         |> Array.fold boundListInsertInvariant boundList
         |> ignore)
